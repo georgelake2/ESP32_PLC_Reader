@@ -9,6 +9,10 @@
 #include <cstring>
 
 namespace {
+    // CIP type IDs 
+    constexpr uint16_t CIP_BOOL = 0x00C1;
+    constexpr uint16_t CIP_DINT = 0x00C4;
+
     static void emit_one_symbol(std::vector<uint8_t>& buf, const std::string& s) {
         //
         //
@@ -18,6 +22,7 @@ namespace {
         buf.insert(buf.end(), s.begin(), s.end());
         if (s.size() & 0x01) buf.push_back(0x00); // pad to even
     }
+
     static void emit_symbol_path(std::vector<uint8_t>& buf, const std::string& full) {
         //
         //
@@ -32,7 +37,37 @@ namespace {
         start = dot + 1;
         }
     }
-}
+
+    static std::vector<uint8_t> build_write_scalar(const std:: string& tag_name, uint16_t type_id, const uint8_t* data, size_t data_len) {
+        //
+        //
+        //
+        std::vector<uint8_t> c;
+
+        c.push_back(0x4D);  // Service: Write Tag
+        c.push_back(0x00);  // Path size placeholder
+        size_t path_start = c.size();
+
+        emit_symbol_path(c, tag_name);
+        c[1] = (uint8_t)((c.size() - path_start) / 2);
+
+        // Type ID (UINT, little-endian)
+        c.push_back((uint8_t)(type_id & 0xFF));
+        c.push_back((uint8_t)(type_id >> 8));
+
+        // Number of elements (scalar = 1)
+        uint16_t elements = 1;
+        c.push_back((uint8_t)(elements & 0xFF));
+        c.push_back((uint8_t)(elements >> 8));
+
+        // Data Bytes
+        c.insert(c.end(), data, data + data_len);
+
+        return c;
+    }
+
+
+} // Anonymous Namespace
 
 namespace Cip {
     std::vector<uint8_t> build_read_request(const std::string& tag_name, uint16_t elements) {
@@ -48,6 +83,28 @@ namespace Cip {
         c.push_back((uint8_t)(elements & 0xFF));
         c.push_back((uint8_t)(elements >> 8));
         return c;
+    }
+
+    std::vector<uint8_t> build_write_bool(const std::string& tag_name, bool value) {
+        //
+        //
+        //
+        uint8_t b = value ? 0x01 : 0x00;
+        return build_write_scalar(tag_name, CIP_BOOL, &b, 1);
+    }
+
+
+    std::vector<uint8_t> build_write_dint(const std::string& tag_name, int32_t value) {
+        //
+        //
+        //
+        uint8_t buf[4];
+        uint32_t u = static_cast<uint32_t>(value);
+        buf[0] = (uint8_t)(u & 0xFF);
+        buf[1] = (uint8_t)((u >> 8) & 0xFF);
+        buf[2] = (uint8_t)((u >> 16) & 0xFF);
+        buf[3] = (uint8_t)((u >> 24) & 0xFF);
+        return build_write_scalar(tag_name, CIP_DINT, buf, 4);
     }
 
     std::vector<uint8_t> wrap_sendrr(const std::vector<uint8_t>& cip) {
@@ -165,4 +222,4 @@ namespace Cip {
         out.type = Type::UNSUPPORTED;
         return false;
     }
-}
+} // Namespace CIP

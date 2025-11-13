@@ -27,15 +27,17 @@ namespace Cip {
         } v{};
     };
 
-    // Build a CIP "Read Tag Service" for a symbol path with 'elements' count.
+    // ------------ READ-------------------
     std::vector<uint8_t> build_read_request(const std::string& tag_name, uint16_t elements);
 
-    // Wrap a CIP payload into a SendRRData (UCMM) data item.
-    std::vector<uint8_t> wrap_sendrr(const std::vector<uint8_t>& cip);
+    // ------------ WRITE -----------------
+    std::vector<uint8_t> build_write_bool(const std::string& tag_name, bool value);
+    std::vector<uint8_t> build_write_dint(const std::string& tag_name, int32_t value);
 
-    // Pull the Unconnected Data (0x00B2) item payload back out of a SendRRData reply.
+    // ------------ Encapsulation ---------
+    std::vector<uint8_t> wrap_sendrr(const std::vector<uint8_t>& cip);
     bool extract_cip_from_rr(const std::vector<uint8_t>& rr, std::vector<uint8_t>& out);
 
-    // Parse a simple read-reply payload (scalar types).
+    // ------------ Parse -----------------
     bool parse_read_reply(const std::vector<uint8_t>& c, Value& out);
 }

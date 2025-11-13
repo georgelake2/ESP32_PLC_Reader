@@ -15,7 +15,10 @@
 //      RQ1: Can ESP32 detect unauthorized PLC logic or parameter changes?
 //          - Need to monitor PLC AuditValue, and PID Parameters
 //
-//      RQ2: What are the latency and rliability trade-offs compared to built-in PLC tools?    
+//      RQ2: What are the latency and reliability trade-offs compared to built-in PLC tools?  
+//          Notes: 
+//          ESP can be focused on security, PLC focused on process control
+//          Create a separate security network that can be monitored for security risks
 //          
 //      RQ3: How reilient is the system to false positives?
 //
@@ -75,12 +78,12 @@ extern "C" void app_main(void) {
     }
     ESP_LOGI(TAG, "Wi-Fi connected");
 
-    // ENIP session
+    // ENIP session --------------------------------------------------------------------------
     EnipClient enip(PLC_IP, PLC_PORT);
     if (!enip.connect_tcp())      { ESP_LOGE(TAG, "TCP connect failed"); return; }
     if (!enip.register_session()) { ESP_LOGE(TAG, "RegisterSession failed"); enip.close(); return; }
 
-    // ControllerStatus (DINT)
+    // ControllerStatus (DINT) ----------------------------------------------------------------
     int32_t ctrl = -1;
     if (!read_dint(enip, WDG_BASE ".ControllerStatus", ctrl)) {
         ESP_LOGE(TAG, "Read failed: %s.ControllerStatus", WDG_BASE);
@@ -88,7 +91,7 @@ extern "C" void app_main(void) {
     }
     ESP_LOGI(TAG, "ControllerStatus = %ld", (long)ctrl);
 
-    // DateTime[0..6] (DINT[7]) → epoch ms
+    // DateTime[0..6] (DINT[7]) → epoch ms -----------------------------------------------------
     std::array<int32_t,7> dt{};
     if (!read_dint_array7(enip, WDG_BASE ".DateTime", dt)) {
         ESP_LOGE(TAG, "Read failed: %s.DateTime (DINT[7])", WDG_BASE);
@@ -102,24 +105,39 @@ extern "C" void app_main(void) {
     const int64_t epoch = EpochTime::toEpochMs(plc_ts, PLC_TZ_OFFSET_MINUTES);
     if (epoch >= 0) ESP_LOGI(TAG, "PLC epoch (ms) = %lld", (long long)epoch);
 
-    // AuditValue (LINT) once
+    // AuditValue (LINT) once ---------------------------------------------------------------------
     int64_t audit = 0;
     if (read_lint(enip, WDG_BASE ".AuditValue", audit)) {
         ESP_LOGI(TAG, "AuditValue = %lld (0x%016llx)",
                  (long long)audit, (unsigned long long)audit);
     }
 
-    // Start minimal Audit monitor (authorized tag is your UDT member)
-    start_audit_monitor(&enip,
-                        WDG_BASE ".AuditValue",
+    // PID Tuning Constants -----------------------------------------------------------------------
+    float kp = 0.0f, ki = 0.0f, kd = 0.0f;
+    bool ok_kp = read_real(enip, WDG_BASE ".WDG_Kp", kp);
+    bool ok_ki = read_real(enip, WDG_BASE ".WDG_Ki", ki);
+    bool ok_kd = read_real(enip, WDG_BASE ".WDG_Kd", kd);
+
+    if (ok_kp && ok_ki && ok_kd) {
+        ESP_LOGI(TAG, "WDG PID gains: Kp=%.3f Ki=%.3f Kd=%.3f", kp, ki, kd);
+    } else {
+        ESP_LOGW(TAG, "PID read failed (Kp=%d Ki=%d Kd=%d)", ok_kp, ok_ki, ok_kd);
+    }
+
+    // Start Audit monitor --------------------------------------------------------------------------------
+    start_audit_monitor(&enip, 
+                        WDG_BASE ".AuditValue", 
                         WDG_BASE ".AuthorizedUser",
-                        /*poll_ms=*/200);
+                        WDG_BASE ".WDG_Kp",
+                        WDG_BASE ".WDG_Ki",
+                        WDG_BASE ".WDG_Kd", 
+                        /*poll_ms=*/ 200);
 
     // Idle loop
     while (true) vTaskDelay(pdMS_TO_TICKS(1000));
 
-    // Not reached (kept for completeness)
+    // Complete
     enip.close();
 }
-
+ 
 // ---------------------------------------------------------------------------------------------------------------------------

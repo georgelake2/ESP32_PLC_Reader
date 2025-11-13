@@ -11,6 +11,9 @@
 #include "TagReads.hpp"
 
 bool read_tag_scalar(EnipClient& enip, const char* tag, Cip::Value& out) {
+    //
+    //
+    //
     auto cip = Cip::build_read_request(tag, 1);
     auto rr  = Cip::wrap_sendrr(cip);
     std::vector<uint8_t> rr_body, cip_reply;
@@ -20,6 +23,9 @@ bool read_tag_scalar(EnipClient& enip, const char* tag, Cip::Value& out) {
 }
 
 bool read_dint(EnipClient& enip, const char* tag, int32_t& out) {
+    //
+    //
+    //
     Cip::Value v{};
     if (!read_tag_scalar(enip, tag, v)) return false;
     if (v.type != Cip::Type::DINT) return false;
@@ -28,6 +34,9 @@ bool read_dint(EnipClient& enip, const char* tag, int32_t& out) {
 }
 
 bool read_lint(EnipClient& enip, const char* tag, int64_t& out) {
+    //
+    //
+    //
     Cip::Value v{};
     if (!read_tag_scalar(enip, tag, v)) return false;
     if (v.type != Cip::Type::LINT) return false;
@@ -35,7 +44,21 @@ bool read_lint(EnipClient& enip, const char* tag, int64_t& out) {
     return true;
 }
 
+bool read_real(EnipClient& enip, const char* tag, float& out) {
+    //
+    //
+    //
+    Cip::Value v{};
+    if (!read_tag_scalar(enip, tag, v)) return false;
+    if (v.type != Cip::Type::REAL) return false;
+    out = v.v.f32;
+    return true;
+}
+
 bool read_dint_array7(EnipClient& enip, const char* base, std::array<int32_t,7>& out) {
+    //
+    //
+    //
     auto cip = Cip::build_read_request(base, /*elements*/7);
     auto rr  = Cip::wrap_sendrr(cip);
     std::vector<uint8_t> rr_body, c;

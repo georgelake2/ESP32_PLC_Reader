@@ -21,7 +21,13 @@
 #include <cstdint>
 class EnipClient;
 
-void start_audit_monitor(EnipClient* enip, const char* audit_tag, const char* authorized_tag, uint32_t poll_ms);
+void start_audit_monitor(EnipClient* enip, 
+                            const char* audit_tag, 
+                            const char* authorized_tag,
+                            const char* kp_tag,
+                            const char* ki_tag,
+                            const char* kd_tag, 
+                            uint32_t poll_ms);
 
 bool readAuditValue(int64_t& out_lint);
 bool readAuthorizedUser(int32_t& out_dint);
