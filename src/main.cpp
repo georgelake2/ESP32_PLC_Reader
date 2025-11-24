@@ -38,6 +38,7 @@
 #include "EpochTime.hpp"
 #include "AuditMonitor.hpp"
 #include "TagReads.hpp"
+#include "ExperimentInstrumentation.hpp"
 
 // ---------------- User config (can be overridden by -D flags) ----------------
 #ifndef WIFI_SSID
@@ -63,12 +64,16 @@
 static const char* TAG = "MAIN_APP";
 
 extern "C" void app_main(void) {
-    // Quiet logs globally; keep our tag at INFO.
+    // Quiet logs globally; keep tag at INFO.
     esp_log_level_set("*", ESP_LOG_WARN);
     esp_log_level_set(TAG, ESP_LOG_INFO);
 
     // Monitor Audit Warnings
     esp_log_level_set("AUDIT_MON", ESP_LOG_INFO);
+
+    // Initialize experiment instrumentation (scenario label)
+    // Change scenario label as appropriate
+    Experiment::init("S1");
 
     // NVS + Wi-Fi
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -132,6 +137,12 @@ extern "C" void app_main(void) {
                         WDG_BASE ".WDG_Ki",
                         WDG_BASE ".WDG_Kd", 
                         /*poll_ms=*/ 200);
+
+    // Periodically dump an audit summary every 10 seconds
+    while (true) {
+        vTaskDelay(pdMS_TO_TICKS(10000));
+        Experiment::dump_summary();
+    }
 
     // Idle loop
     while (true) vTaskDelay(pdMS_TO_TICKS(1000));

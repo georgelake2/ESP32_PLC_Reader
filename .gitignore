@@ -81,3 +81,5 @@ secrets.json
 # SPIFFS / LittleFS images (built artifacts)
 spiffs.bin
 littlefs.bin
+experiment_log.csv
+rawlog.txt

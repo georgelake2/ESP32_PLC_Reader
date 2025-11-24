@@ -8,7 +8,8 @@
 
 #include "AuditMonitor.hpp"
 #include "TagReads.hpp"
-#include "TagWrites.hpp"
+#include "ExperimentInstrumentation.hpp"
+#include "EnipClient.hpp"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -24,6 +25,19 @@ struct AuditCfg {
     const char* kd_tag;
     uint32_t poll_ms;
 };
+
+static bool reconnect_enip(EnipClient& enip) {
+    enip.close();
+    for (;;) {
+        ESP_LOGW(TAG, "Attempting ENIP reconnect...");
+        if (enip.connect_tcp() && enip.register_session()) {
+            ESP_LOGI(TAG, "ENIP reconnect successful");
+            return true;
+        }
+        ESP_LOGW(TAG, "ENIP reconnect failed; retrying in 1s");
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
 
 static bool nearly_equal(float a, float b, float eps = 1e-6f) {
     //
@@ -47,6 +61,9 @@ static void audit_task(void* arg) {
 
     bool have_audit_baseline = false;
     bool have_pid_baseline = false;
+    bool baseline_marked = false;
+
+    int consecutive_failures = 0;
 
     for (;;) {
         int64_t audit = 0;
@@ -60,11 +77,28 @@ static void audit_task(void* arg) {
         bool ok_kd      = read_real(*cfg.enip, cfg.kd_tag,      kd);
 
         if (!ok_audit || !ok_auth || !ok_kp || !ok_ki || !ok_kd) {
-            ESP_LOGW(TAG, "Read error (audit_ok=%d auth_ok=%d kp=%d ki=%d kd=%d). Retrying...", 
-                        ok_audit, ok_auth, ok_kp, ok_ki, ok_kd);
+            Experiment::record_read_failure();
+
+            ++consecutive_failures;
+
+            ESP_LOGW(TAG,
+                     "Read error (audit_ok=%d auth_ok=%d kp=%d ki=%d kd=%d). "
+                     "Fail count=%d",
+                     ok_audit, ok_auth, ok_kp, ok_ki, ok_kd, consecutive_failures);
+
+            // After N consecutive failures, attempt a full ENIP reconnect
+            if (consecutive_failures >= 5) {
+                ESP_LOGW(TAG, "Persistent failures; attempting ENIP reconnect.");
+                reconnect_enip(*cfg.enip);
+                consecutive_failures = 0;
+            }
+
             vTaskDelay(pdMS_TO_TICKS(cfg.poll_ms));
             continue;
         }
+        // Successful read: reset failure counter
+        consecutive_failures = 0;
+
         // AuditValue baseline / change detection -------------------------------------------------------------
         if (!have_audit_baseline) {
             last_audit = audit;
@@ -78,14 +112,15 @@ static void audit_task(void* arg) {
                     (long long)last_audit, (long long)audit,
                     (unsigned long long)last_audit, (unsigned long long)audit,
                     (int)auth);
-                // Write to DINT Counter
-                increment_dint_tag(*cfg.enip, "WDG_Status.UnauthorizedCount");   
-
             } else {
                 ESP_LOGI(TAG,
                     "AUTHORIZED_CHANGE: AuditValue %lld->%lld (auth=%d).",
                     (long long)last_audit, (long long)audit, (int)auth);
             }
+
+            // Instrumentation: record classification
+            Experiment::record_audit_change(auth != 0);
+
             last_audit = audit;
         }
 
@@ -107,13 +142,14 @@ static void audit_task(void* arg) {
                         "UNAUTHORIZED_PID_CHANGE: "
                         "Kp %.6f->%.6f, Ki %.6f->%.6f, Kd %.6f->%.6f (auth=%d)",
                         last_kp, kp, last_ki, ki, last_kd, kd, (int)auth);
-                        increment_dint_tag(*cfg.enip, "WDG_Status.UnauthorizedCount");
                 } else {
                     ESP_LOGI(TAG,
                         "AUTHORIZED_PID_CHANGE: "
                         "Kp %.6f->%.6f, Ki %.6f->%.6f, Kd %.6f->%.6f (auth=%d)",
                         last_kp, kp, last_ki, ki, last_kd, kd, (int)auth);
                 }
+                // Instrumentation: record classification
+                Experiment::record_pid_change(auth != 0);
 
                 last_kp = kp;
                 last_ki = ki;
@@ -121,6 +157,12 @@ static void audit_task(void* arg) {
             }
         }
         // ----------------------------------------------------------------------------------------------------
+        // If both baselines are set and it has not been marked yet, mark baseline time
+        if (!baseline_marked && have_audit_baseline && have_pid_baseline) {
+            Experiment::mark_baseline_established();
+            baseline_marked = true;
+        }
+        
         vTaskDelay(pdMS_TO_TICKS(cfg.poll_ms));
     }
 }
