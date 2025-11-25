@@ -1,0 +1,88 @@
+--- Terminal on /dev/ttyACM0 | 115200 8-N-1
+--- Available filters and text transformations: colorize, debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time
+--- More details at https://bit.ly/pio-monitor-filters
+--- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+
+I (100000) AUDIT_MON: INFO: Watchdog startup complete
+I (100050) AUDIT_MON: INFO: Baseline established from WDG_Status_Instance
+
+I (110000) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+I (110500) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (120000) AUDIT_MON: MARKER: trial_id=1, scenario_id=S2A, t_change_ms=121000
+I (120400) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (121200) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327600->-8008681559863327580 (auth=0)
+W (121600) AUDIT_MON: UNAUTHORIZED_PID_CHANGE: Kp 4.000000->6.000000, Ki 5.000000->1.000000, Kd 3.000000->6.000000 (auth=0)
+I (122500) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327580->-8008681559863327570 (auth=1).
+I (122900) AUDIT_MON: AUTHORIZED_PID_CHANGE: Kp 6.000000->4.000000, Ki 1.000000->5.000000, Kd 6.000000->3.000000 (auth=1)
+I (123300) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (130000) AUDIT_MON: MARKER: trial_id=1, scenario_id=S3A, t_change_ms=131000
+I (130400) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (131150) AUDIT_MON: UNAUTHORIZED_PID_CHANGE: Kp 4.000000->7.500000, Ki 5.000000->0.500000, Kd 3.000000->7.000000 (auth=0)
+W (131700) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327570->-8008681559863327540 (auth=0)
+I (132800) AUDIT_MON: AUTHORIZED_PID_CHANGE: Kp 7.500000->4.000000, Ki 0.500000->5.000000, Kd 7.000000->3.000000 (auth=1)
+I (133200) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327540->-8008681559863327530 (auth=1).
+I (133800) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (140000) AUDIT_MON: MARKER: trial_id=1, scenario_id=S4A, t_change_ms=141000
+I (140300) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (141250) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327530->-8008681559863327500 (auth=0)
+W (141700) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327500->-8008681559863327480 (auth=0)
+I (142600) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327480->-8008681559863327470 (auth=1).
+I (143100) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (150000) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+I (150500) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (160000) AUDIT_MON: MARKER: trial_id=2, scenario_id=S2A, t_change_ms=161000
+I (160300) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (161050) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327470->-8008681559863327450 (auth=0)
+W (161600) AUDIT_MON: UNAUTHORIZED_PID_CHANGE: Kp 4.000000->5.500000, Ki 5.000000->2.000000, Kd 3.000000->5.500000 (auth=0)
+I (162400) AUDIT_MON: AUTHORIZED_PID_CHANGE: Kp 5.500000->4.000000, Ki 2.000000->5.000000, Kd 5.500000->3.000000 (auth=1)
+I (162900) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327450->-8008681559863327440 (auth=1).
+I (163300) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (170000) AUDIT_MON: MARKER: trial_id=2, scenario_id=S3A, t_change_ms=171000
+I (170300) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (171300) AUDIT_MON: UNAUTHORIZED_PID_CHANGE: Kp 4.000000->9.000000, Ki 5.000000->0.000000, Kd 3.000000->9.000000 (auth=0)
+I (172100) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327440->-8008681559863327410 (auth=0)
+I (173200) AUDIT_MON: AUTHORIZED_PID_CHANGE: Kp 9.000000->4.000000, Ki 0.000000->5.000000, Kd 9.000000->3.000000 (auth=1)
+I (173700) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327410->-8008681559863327400 (auth=1).
+I (174200) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (180000) AUDIT_MON: MARKER: trial_id=2, scenario_id=S4A, t_change_ms=181000
+I (180300) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (181400) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327400->-8008681559863327380 (auth=0)
+I (182600) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+I (183200) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327380->-8008681559863327375 (auth=1).
+I (183700) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (190000) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+I (190500) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (200000) AUDIT_MON: MARKER: trial_id=3, scenario_id=S2A, t_change_ms=201000
+I (200200) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (201100) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327375->-8008681559863327350 (auth=0)
+I (201900) AUDIT_MON: UNAUTHORIZED_PID_CHANGE: Kp 4.000000->6.500000, Ki 5.000000->1.500000, Kd 3.000000->6.500000 (auth=0)
+I (203000) AUDIT_MON: AUTHORIZED_PID_CHANGE: Kp 6.500000->4.000000, Ki 1.500000->5.000000, Kd 6.500000->3.000000 (auth=1)
+I (203400) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327350->-8008681559863327340 (auth=1).
+I (204000) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (210000) AUDIT_MON: MARKER: trial_id=3, scenario_id=S3A, t_change_ms=211000
+I (210300) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (211250) AUDIT_MON: UNAUTHORIZED_PID_CHANGE: Kp 4.000000->7.000000, Ki 5.000000->0.800000, Kd 3.000000->7.000000 (auth=0)
+W (211900) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327340->-8008681559863327310 (auth=0)
+I (212800) AUDIT_MON: AUTHORIZED_PID_CHANGE: Kp 7.000000->4.000000, Ki 0.800000->5.000000, Kd 7.000000->3.000000 (auth=1)
+I (213300) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327310->-8008681559863327305 (auth=1).
+I (213900) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (220000) AUDIT_MON: MARKER: trial_id=3, scenario_id=S4A, t_change_ms=221000
+I (220300) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+W (221300) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327305->-8008681559863327280 (auth=0)
+W (221850) AUDIT_MON: UNAUTHORIZED_CHANGE: AuditValue -8008681559863327280->-8008681559863327260 (auth=0)
+I (222700) AUDIT_MON: AUTHORIZED_CHANGE: AuditValue -8008681559863327260->-8008681559863327250 (auth=1).
+I (223200) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+
+I (230000) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
+I (230500) AUDIT_MON: NO_CHANGE: All monitored fields equal to baseline (auth=1)
