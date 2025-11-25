@@ -1,0 +1,72 @@
+{
+    "scenario_id": null,
+    "scenario_variant": null,
+    "trial_id": null, 
+    "change_expected": null,
+    "change_type": null,
+
+    "poll_seq": null,
+    "esp32_timestamp_iso": null,
+    "esp32_timestamp_ms": null,
+    
+    "plc_timestamp_iso": null,
+    "plc_timestamp_ms": null,
+
+    "current": {
+        "AuditValue": null,
+        "AuthorizedUser": null,
+        "Kp": null,
+        "Ki": null,
+        "Kd": null,
+        "ControllerStatus": null,
+        "AuxStatus": null,
+        "ExperimentMarker": null
+    },
+
+    "baseline": {
+        "AuditValue": null,
+        "AuthorizedUser": null,
+        "Kp": null,
+        "Ki": null,
+        "Kd": null,
+        "ControllerStatus": null,
+        "AuxStatus": null
+    },
+
+    "comparison": {
+        "any_change": null,
+        "unauthorized_change": null,
+        "authorized_change": null,
+
+        "changed_fields": [],
+
+        "chg_AuditValue": null,
+        "chg_AuthorizedUser": null,
+        "chg_Kp": null,
+        "chg_Ki": null,
+        "chg_Kd": null,
+        "chg_ControllerStatus": null,
+        "chg_AuxStatus": null,
+
+        "delta_Kp": null,
+        "delta_Ki": null,
+        "delta_Kd": null
+    },
+
+    "comm": {
+        "comm_status": null,
+        "read_ok": null,
+        "retry_count": null
+    },
+
+    "groundtruth": {
+        "t_change_groundtruth_iso": null,
+        "t_change_marker_seen": null
+    },
+
+    "metadata": {
+        "poll_period_ms": null,
+        "esp_firmware_version": null,
+        "plc_firmware_version": null
+    }
+}
