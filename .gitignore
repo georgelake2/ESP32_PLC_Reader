@@ -85,3 +85,4 @@ experiment_log.csv
 rawlog.txt
 watchdog_json_detailed_plan.pdf
 watchdog_json_todo_checklist.pdf
+sdkconfig.esp32-c6-devkitc-1
