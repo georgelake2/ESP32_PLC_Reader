@@ -83,3 +83,5 @@ spiffs.bin
 littlefs.bin
 experiment_log.csv
 rawlog.txt
+watchdog_json_detailed_plan.pdf
+watchdog_json_todo_checklist.pdf
