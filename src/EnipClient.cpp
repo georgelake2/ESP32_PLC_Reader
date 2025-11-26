@@ -12,6 +12,7 @@
 #include <cstring>
 #include <vector>
 #include <errno.h>
+#include <inttypes.h>
 
 #include "EnipClient.hpp"
 
@@ -76,12 +77,12 @@ bool EnipClient::register_session() {
     if (len && !recv_all(rbody.data(), len)) return false;
 
     if (rh.command != 0x0065 || rh.status != 0) {
-        ESP_LOGE(TAG, "RegisterSession failed: status=0x%08X", rh.status);
+        ESP_LOGE(TAG, "RegisterSession failed: status=0x%08" PRIX32, (uint32_t)rh.status);
         return false;
     }
 
     session_ = rh.session;
-    ESP_LOGI(TAG, "Session=0x%08X", session_);
+    ESP_LOGI(TAG, "Session=0x%08" PRIX32, (uint32_t)session_);
     return true;
 }
 
@@ -108,7 +109,7 @@ bool EnipClient::send_rr_data(const std::vector<uint8_t>& rr, std::vector<uint8_
     if (len && !recv_all(rr_resp.data(), len)) return false;
 
     if (rh.command != 0x006F || rh.status != 0) {
-        ESP_LOGE(TAG, "SendRRData failed: status=0x%08X", rh.status);
+        ESP_LOGE(TAG, "SendRRData failed: status=0x%08" PRIX32, (uint32_t)rh.status);
         return false;
     }
     return true;
