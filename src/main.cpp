@@ -66,14 +66,20 @@ static const char* TAG = "MAIN_APP";
 extern "C" void app_main(void) {
     // Quiet logs globally; keep tag at INFO.
     esp_log_level_set("*", ESP_LOG_WARN);
-    esp_log_level_set(TAG, ESP_LOG_INFO);
 
-    // Monitor Audit Warnings
+    // Per-Tag Overrides
+    esp_log_level_set(TAG, ESP_LOG_INFO);
     esp_log_level_set("AUDIT_MON", ESP_LOG_INFO);
+    esp_log_level_set("JSON", ESP_LOG_INFO);
 
     // Initialize experiment instrumentation (scenario label)
     // Change scenario label as appropriate
-    Experiment::init("S1");
+Experiment::init("S1",           // scenario_id
+                 "baseline",     // scenario_variant
+                 1,             // trial_id
+                 false,         // change_expected
+                 "none",        // change_type
+                 200);          // poll_period_ms (matches AuditMonitor cfg)
 
     // NVS + Wi-Fi
     ESP_ERROR_CHECK(nvs_flash_init());

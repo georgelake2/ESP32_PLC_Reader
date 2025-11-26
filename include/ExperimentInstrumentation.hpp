@@ -8,12 +8,23 @@
 
 # pragma once
 
-# include <cstdint>
+#include <cstdint>
+
+#include "json_log.hpp"
+
+struct LogEntry;
 
 // Simple container for aggregated metrics.
 // Can extend later if more fields are needed.
 struct ExperimentMetrics {
     const char* scenario_id = nullptr;
+    const char* scenario_variant;
+    int         trial_id;
+    bool        change_expected;
+    const char* change_type;
+    uint32_t    poll_period_ms;
+    const char* esp_firmware_version;
+    const char* plc_firmware_version;
 
     // Counters
     uint32_t authorized_audit_changes   = 0;
@@ -31,9 +42,15 @@ struct ExperimentMetrics {
 };
 
 namespace Experiment {
+
     // Initialize metrics for a new run (scenario S1-S5)
     // Call once from app_main() before starting the audit task
-    void init(const char* scenario_id);
+    void init(const char* scenario_id, 
+              const char* scenario_variant,
+              int trial_id,
+              bool change_expected,
+              const char* change_type,
+              uint32_t poll_period_ms);
 
     // Reset counters for a fresh repetition of the same scenario
     void reset_metrics();
@@ -60,6 +77,13 @@ namespace Experiment {
     // Call at the end of a scenario run, or periodically for debugging
     void dump_summary();
 
+    // Fills the scenario/experiment-related fields in a LogEntry
+    // Everything that is the same for every poll in a trial
+    void fill_log_entry_context(LogEntry& entry);
+
+    // Emits a single JSONL record.
+    void emit_log_entry(const LogEntry& entry);
+
     // Optional accessor to inspect metrics directly:
     const ExperimentMetrics& current();
-}
+} // namespace Experiment

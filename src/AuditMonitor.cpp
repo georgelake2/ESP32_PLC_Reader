@@ -10,11 +10,16 @@
 #include "TagReads.hpp"
 #include "ExperimentInstrumentation.hpp"
 #include "EnipClient.hpp"
+#include "json_log.hpp"
+
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 static const char* TAG = "AUDIT_MON";
+
+// Global poll sequence counter
+static long g_poll_seq = 0;
 
 struct AuditCfg {
     EnipClient* enip;
@@ -161,6 +166,101 @@ static void audit_task(void* arg) {
         if (!baseline_marked && have_audit_baseline && have_pid_baseline) {
             Experiment::mark_baseline_established();
             baseline_marked = true;
+        }
+
+                // ----------------------------------------------------------------------------------------------------
+        // JSON logging: emit one LogEntry per successful poll
+        {
+            LogEntry log;
+
+            // Fill scenario + timing + metadata (esp/plc versions, poll_period_ms)
+            Experiment::fill_log_entry_context(log);
+
+            // Poll sequence number (monotonic per firmware run)
+            log.poll_seq = g_poll_seq++;
+
+            // --- Current values ---
+            log.current.AuditValue      = std::to_string(static_cast<long long>(audit));
+            log.current.AuthorizedUser  = std::to_string(static_cast<int>(auth));
+            log.current.Kp              = kp;
+            log.current.Ki              = ki;
+            log.current.Kd              = kd;
+
+            // Status tags are not yet read here; mark as NA for now
+            log.current.ControllerStatus = "NA";
+            log.current.AuxStatus        = "NA";
+            log.current.ExperimentMarker = "NA";
+
+            // --- Baseline values ---
+            if (have_audit_baseline) {
+                log.baseline.AuditValue = std::to_string(static_cast<long long>(last_audit));
+            } else {
+                log.baseline.AuditValue = "NA";
+            }
+
+            // You do not track a baseline AuthorizedUser yet
+            log.baseline.AuthorizedUser = "NA";
+
+            if (have_pid_baseline) {
+                log.baseline.Kp = last_kp;
+                log.baseline.Ki = last_ki;
+                log.baseline.Kd = last_kd;
+            } else {
+                log.baseline.Kp = 0.0;
+                log.baseline.Ki = 0.0;
+                log.baseline.Kd = 0.0;
+            }
+
+            log.baseline.ControllerStatus = "NA";
+            log.baseline.AuxStatus        = "NA";
+
+            // --- Comparison data ---
+            bool audit_changed = have_audit_baseline && (audit != last_audit);
+            bool kp_changed    = have_pid_baseline && !nearly_equal(kp, last_kp);
+            bool ki_changed    = have_pid_baseline && !nearly_equal(ki, last_ki);
+            bool kd_changed    = have_pid_baseline && !nearly_equal(kd, last_kd);
+
+            log.comparison.any_change =
+                audit_changed || kp_changed || ki_changed || kd_changed;
+
+            log.comparison.authorized_change =
+                log.comparison.any_change && (auth != 0);
+
+            log.comparison.unauthorized_change =
+                log.comparison.any_change && (auth == 0);
+
+            // List of changed fields
+            log.comparison.changed_fields.clear();
+            if (audit_changed) log.comparison.changed_fields.push_back("AuditValue");
+            if (kp_changed)    log.comparison.changed_fields.push_back("Kp");
+            if (ki_changed)    log.comparison.changed_fields.push_back("Ki");
+            if (kd_changed)    log.comparison.changed_fields.push_back("Kd");
+
+            // Per-field flags
+            log.comparison.chg_AuditValue       = audit_changed;
+            log.comparison.chg_AuthorizedUser   = false;  // no baseline auth yet
+            log.comparison.chg_Kp               = kp_changed;
+            log.comparison.chg_Ki               = ki_changed;
+            log.comparison.chg_Kd               = kd_changed;
+            log.comparison.chg_ControllerStatus = false;
+            log.comparison.chg_AuxStatus        = false;
+
+            // Deltas for PID gains
+            log.comparison.delta_Kp = kp_changed ? (kp - last_kp) : 0.0;
+            log.comparison.delta_Ki = ki_changed ? (ki - last_ki) : 0.0;
+            log.comparison.delta_Kd = kd_changed ? (kd - last_kd) : 0.0;
+
+            // --- Comm status (success path only for now) ---
+            log.comm.comm_status = "OK";
+            log.comm.read_ok     = true;
+            log.comm.retry_count = 0;  // we'll wire real retries later
+
+            // --- Ground truth (to be filled offline / later tooling) ---
+            log.groundtruth.t_change_groundtruth_iso = "NA";
+            log.groundtruth.t_change_marker_seen     = "NA";
+
+            // Emit one JSON line
+            Experiment::emit_log_entry(log);
         }
         
         vTaskDelay(pdMS_TO_TICKS(cfg.poll_ms));

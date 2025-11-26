@@ -4,13 +4,18 @@
 
 #include "ExperimentInstrumentation.hpp"
 #include "EpochTime.hpp"
+#include "json_log.hpp"
+#include "json_encode.hpp"
+#include "iso8601.hpp"
+
 #include "esp_log.h"
 #include <stdio.h>
+#include <string>
 #include <inttypes.h>
 
 namespace {
     static const char* TAG = "EXPERIMENT";
-    static const char* CSV_TAG = "EXPCSV";
+    // static const char* CSV_TAG = "EXPCSV";
 
     // Single global metrics instance for this firmware
     ExperimentMetrics g_metrics;
@@ -33,21 +38,34 @@ namespace {
 } // anonymous namespace
 
 namespace Experiment {
-
-        void init (const char* scenario_id) {
+        void init (const char*  scenario_id,
+                    const char* scenario_variant,
+                    int         trial_id,
+                    bool        change_expected,
+                    const char* change_type,
+                    uint32_t    poll_period_ms) {
             // Initialize metrics and scenario label
             g_metrics = ExperimentMetrics{};
-            g_metrics.scenario_id = scenario_id;
-            g_comm_fault_active = false;
-            g_comm_fault_start_ms = 0;
+            g_metrics.scenario_id           = scenario_id;
+            g_comm_fault_active             = false;
+            g_comm_fault_start_ms           = 0;
+            g_metrics.scenario_variant      = scenario_variant;
+            g_metrics.trial_id              = trial_id;
+            g_metrics.change_expected       = change_expected;
+            g_metrics.change_type           = change_type;
+            g_metrics.poll_period_ms        = poll_period_ms;
+
+            // Firmware version (UPDATE WITH ACTUAL)
+            g_metrics.esp_firmware_version = "v11.11.11";
+            g_metrics.plc_firmware_version = "37.11.11";
 
             ESP_LOGI(TAG, "Experiment initialized (scenario='%s')", scenario_id ? scenario_id : "(null)");
 
-            // CSV-style header (optional)
-            ESP_LOGI(CSV_TAG,
-                    "type,t_ms,scenario,event,authorized,"
-                    "auth_audit,unauth_audit,auth_pid,unauth_pid,"
-                    "read_fail,comm_faults,baseline_ms,first_det_ms,comm_fault_ms");
+            // // CSV-style header (optional)
+            // ESP_LOGI(CSV_TAG,
+            //         "type,t_ms,scenario,event,authorized,"
+            //         "auth_audit,unauth_audit,auth_pid,unauth_pid,"
+            //         "read_fail,comm_faults,baseline_ms,first_det_ms,comm_fault_ms");
         }
 
         void reset_metrics() {
@@ -65,7 +83,7 @@ namespace Experiment {
             ESP_LOGI(TAG, "Baselines established at t=%lld ms",
                     (long long)g_metrics.baseline_established_ms);
 
-            ESP_LOGI(CSV_TAG,
+            ESP_LOGI(TAG,
                     "EVENT,%lld,%s,BASELINE,-1,"
                     "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                     (long long)g_metrics.baseline_established_ms,
@@ -90,7 +108,7 @@ namespace Experiment {
             mark_first_detection_if_needed();
 
             int64_t t = now_ms();
-            ESP_LOGI(CSV_TAG,
+            ESP_LOGI(TAG,
                     "EVENT,%lld,%s,AUDIT,%d,"
                     "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                     (long long)t,
@@ -116,7 +134,7 @@ namespace Experiment {
             mark_first_detection_if_needed();
 
             int64_t t = now_ms();
-            ESP_LOGI(CSV_TAG,
+            ESP_LOGI(TAG,
                     "EVENT,%lld,%s,PID,%d,"
                     "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                     (long long)t,
@@ -137,7 +155,7 @@ namespace Experiment {
             ++g_metrics.read_failures;
 
             int64_t t = now_ms();
-            ESP_LOGI(CSV_TAG,
+            ESP_LOGI(TAG,
                 "EVENT,%lld,%s,READ_FAIL,-1,"
                 "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                 (long long)t,
@@ -160,7 +178,7 @@ namespace Experiment {
             ++g_metrics.comm_fault_intervals;
             ESP_LOGW(TAG, "COMM_FAULT_START at t = %lld ms", (long long)g_comm_fault_start_ms);
 
-            ESP_LOGI(CSV_TAG,
+            ESP_LOGI(TAG,
                 "EVENT,%lld,%s,COMM_FAULT_START,-1,"
                 "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                 (long long)g_comm_fault_start_ms,
@@ -186,7 +204,7 @@ namespace Experiment {
             }
             ESP_LOGW(TAG, "COMM_FAULT_END at t=%lld ms (interval=%lld ms)", (long long)end_ms, (long long)(end_ms - g_comm_fault_start_ms));
 
-            ESP_LOGI(CSV_TAG,
+            ESP_LOGI(TAG,
                 "EVENT,%lld,%s,COMM_FAULT_END,-1,"
                 "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                 (long long)end_ms,
@@ -200,6 +218,34 @@ namespace Experiment {
                 (long long)g_metrics.baseline_established_ms,
                 (long long)g_metrics.first_detection_ms,
                 (long long)g_metrics.total_comm_fault_dur_ms);
+        }
+
+        void fill_log_entry_context(LogEntry& entry) {
+            // Scenario context
+            entry.scenario_id      = g_metrics.scenario_id      ? g_metrics.scenario_id : "";
+            entry.scenario_variant = g_metrics.scenario_variant ? g_metrics.scenario_variant : "";
+            entry.trial_id         = std::to_string(g_metrics.trial_id);
+            entry.change_expected  = g_metrics.change_expected;
+            entry.change_type      = g_metrics.change_type      ? g_metrics.change_type : "";
+
+            // Timing: poll_seq will be set by the caller; timestamps here
+            int64_t ms = now_ms();
+            entry.esp32_timestamp_ms  = static_cast<long>(ms);
+            entry.esp32_timestamp_iso = make_iso8601_from_millis(ms);
+
+            // PLC time – not yet wired per-poll; mark as NA for now
+            entry.plc_time.plc_timestamp_ms  = -1;
+            entry.plc_time.plc_timestamp_iso = "NA";
+
+            // Metadata
+            entry.metadata.poll_period_ms       = g_metrics.poll_period_ms;
+            entry.metadata.esp_firmware_version = g_metrics.esp_firmware_version ? g_metrics.esp_firmware_version : "";
+            entry.metadata.plc_firmware_version = g_metrics.plc_firmware_version ? g_metrics.plc_firmware_version : "";
+        }
+
+        void emit_log_entry(const LogEntry& entry) {
+            std::string json = encode_log_to_json(entry);
+            ESP_LOGI("JSON", "%s", json.c_str());
         }
 
         void dump_summary() {
@@ -225,7 +271,7 @@ namespace Experiment {
 
                 
             // CSV summary line
-            ESP_LOGI(CSV_TAG,
+            ESP_LOGI(TAG,
                 "SUMMARY,%lld,%s,-1,-1,"
                 "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                 (long long)t,

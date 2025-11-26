@@ -77,6 +77,7 @@ secrets.json
 
 # Log files
 *.log
+/logs
 
 # SPIFFS / LittleFS images (built artifacts)
 spiffs.bin
@@ -86,3 +87,9 @@ rawlog.txt
 watchdog_json_detailed_plan.pdf
 watchdog_json_todo_checklist.pdf
 sdkconfig.esp32-c6-devkitc-1
+logs/log_test2.jsonl
+logs/log_test.jsonl
+.ipynb_checkpoints/Watchdog_experiments-checkpoint.ipynb
+.ipynb_checkpoints/experiment_log_template-checkpoint.json
+sdkconfig.esp32-c6-devkitc-1
+
