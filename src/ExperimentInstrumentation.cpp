@@ -6,6 +6,7 @@
 #include "EpochTime.hpp"
 #include "esp_log.h"
 #include <stdio.h>
+#include <inttypes.h>
 
 namespace {
     static const char* TAG = "EXPERIMENT";
@@ -66,7 +67,7 @@ namespace Experiment {
 
             ESP_LOGI(CSV_TAG,
                     "EVENT,%lld,%s,BASELINE,-1,"
-                    "%u,%u,%u,%u,%u,%u,%lld,%lld,%lld",
+                    "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                     (long long)g_metrics.baseline_established_ms,
                     g_metrics.scenario_id ? g_metrics.scenario_id : "(null)",
                     g_metrics.authorized_audit_changes,
@@ -91,7 +92,7 @@ namespace Experiment {
             int64_t t = now_ms();
             ESP_LOGI(CSV_TAG,
                     "EVENT,%lld,%s,AUDIT,%d,"
-                    "%u,%u,%u,%u,%u,%u,%lld,%lld,%lld",
+                    "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                     (long long)t,
                     g_metrics.scenario_id ? g_metrics.scenario_id : "(null)",
                     authorized ? 1 : 0,
@@ -117,7 +118,7 @@ namespace Experiment {
             int64_t t = now_ms();
             ESP_LOGI(CSV_TAG,
                     "EVENT,%lld,%s,PID,%d,"
-                    "%u,%u,%u,%u,%u,%u,%lld,%lld,%lld",
+                    "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                     (long long)t,
                     g_metrics.scenario_id ? g_metrics.scenario_id : "(null)",
                     authorized ? 1 : 0,
@@ -138,7 +139,7 @@ namespace Experiment {
             int64_t t = now_ms();
             ESP_LOGI(CSV_TAG,
                 "EVENT,%lld,%s,READ_FAIL,-1,"
-                "%u,%u,%u,%u,%u,%u,%lld,%lld,%lld",
+                "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                 (long long)t,
                 g_metrics.scenario_id ? g_metrics.scenario_id : "(null)",
                 g_metrics.authorized_audit_changes,
@@ -161,7 +162,7 @@ namespace Experiment {
 
             ESP_LOGI(CSV_TAG,
                 "EVENT,%lld,%s,COMM_FAULT_START,-1,"
-                "%u,%u,%u,%u,%u,%u,%lld,%lld,%lld",
+                "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                 (long long)g_comm_fault_start_ms,
                 g_metrics.scenario_id ? g_metrics.scenario_id : "(null)",
                 g_metrics.authorized_audit_changes,
@@ -187,7 +188,7 @@ namespace Experiment {
 
             ESP_LOGI(CSV_TAG,
                 "EVENT,%lld,%s,COMM_FAULT_END,-1,"
-                "%u,%u,%u,%u,%u,%u,%lld,%lld,%lld",
+                "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                 (long long)end_ms,
                 g_metrics.scenario_id ? g_metrics.scenario_id : "(null)",
                 g_metrics.authorized_audit_changes,
@@ -206,9 +207,9 @@ namespace Experiment {
             
             ESP_LOGI(TAG,
                 "Scenario='%s' Metrics: "
-                "auth_audit=%u unauth_audit=%u "
-                "auth_pid=%u unauth_pid=%u "
-                "read_fail=%u comm_faults=%u "
+                "auth_audit=%" PRIu32 " unauth_audit=%" PRIu32 " "
+                "auth_pid=%" PRIu32 " unauth_pid=%" PRIu32 " "
+                "read_fail=%" PRIu32 " comm_faults=%" PRIu32 " "
                 "baseline_ms=%lld first_det_ms=%lld "
                 "comm_fault_total_ms=%lld",
                 g_metrics.scenario_id ? g_metrics.scenario_id : "(null)",
@@ -226,7 +227,7 @@ namespace Experiment {
             // CSV summary line
             ESP_LOGI(CSV_TAG,
                 "SUMMARY,%lld,%s,-1,-1,"
-                "%u,%u,%u,%u,%u,%u,%lld,%lld,%lld",
+                "%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%lld,%lld,%lld",
                 (long long)t,
                 g_metrics.scenario_id ? g_metrics.scenario_id : "(null)",
                 g_metrics.authorized_audit_changes,
