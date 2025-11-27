@@ -5,6 +5,7 @@
 
 #include <cstdio>
 #include <cstdint>
+#include <inttypes.h>
 
 #include "iso8601.hpp"
 
@@ -61,10 +62,11 @@ std::string make_iso8601_from_millis(uint64_t ms)
     }
 
     char buffer[64];
-    std::snprintf(buffer, sizeof(buffer),
-                  "%04u-%02u-%02uT%02u:%02u:%02u.%03uZ",
-                  year, month, day,
-                  hours, minutes, seconds, millis);
+
+snprintf(buffer, sizeof(buffer),
+         "%04" PRIu32 "-%02" PRIu32 "-%02" PRIu32 "T%02" PRIu32 ":%02" PRIu32 ":%02" PRIu32 ".%03" PRIu32 "Z",
+         year, month, day,
+         hours, minutes, seconds, millis);
 
     return std::string(buffer);
 }

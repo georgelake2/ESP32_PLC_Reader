@@ -2,7 +2,7 @@ import time
 import serial
 import json
 
-PORT = "/dev/ttyACM0"
+PORT = "COM7"
 BAUD = 115200
 OUT = "logs/log_test.jsonl"
 
