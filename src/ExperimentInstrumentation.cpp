@@ -15,7 +15,6 @@
 
 namespace {
     static const char* TAG = "EXPERIMENT";
-    // static const char* CSV_TAG = "EXPCSV";
 
     // Single global metrics instance for this firmware
     ExperimentMetrics g_metrics;
@@ -24,9 +23,16 @@ namespace {
     bool g_comm_fault_active = false;
     int64_t g_comm_fault_start_ms = 0;
 
+    // Time synce state: PLC epoch at sync and ESP monotonic at sync
+    int64_t g_plc_epoch_at_sync_ms  = -1;
+    int64_t g_esp_ms_at_sync        = 0;
+
     inline int64_t now_ms() {
-        // Monotonic ms from ESP boot
-        return EpochTime::espNowMs();
+        int64_t esp_ms = EpochTime::espNowMs();
+        if (g_plc_epoch_at_sync_ms >= 0) {
+            return g_plc_epoch_at_sync_ms + (esp_ms - g_esp_ms_at_sync);
+        }
+        return esp_ms;
     }
 
     // Helper: set first_detection_ms if not set yet
@@ -76,6 +82,16 @@ namespace Experiment {
             g_comm_fault_start_ms = 0;
 
             ESP_LOGI(TAG, "Experiment metrics reset (scenario='%s')", id ? id : "(null)");
+        }
+
+        void set_time_sync(int64_t plc_epoch_ms_at_sync, int64_t esp_ms_at_sync) {
+            g_plc_epoch_at_sync_ms  = plc_epoch_ms_at_sync;
+            g_esp_ms_at_sync        = esp_ms_at_sync;
+
+            ESP_LOGI(TAG,
+                        "Time sync set: plc_epoch_ms=%lld esp_ms=%lld",
+                        (long long)plc_epoch_ms_at_sync,
+                        (long long)esp_ms_at_sync);
         }
 
         void mark_baseline_established() {

@@ -9,7 +9,7 @@
 # pragma once
 
 #include <cstdint>
-
+#include <stdint.h>
 #include "json_log.hpp"
 
 struct LogEntry;
@@ -45,12 +45,15 @@ namespace Experiment {
 
     // Initialize metrics for a new run (scenario S1-S5)
     // Call once from app_main() before starting the audit task
-    void init(const char* scenario_id, 
-              const char* scenario_variant,
-              int trial_id,
-              bool change_expected,
-              const char* change_type,
-              uint32_t poll_period_ms);
+    void init(const char*   scenario_id, 
+              const char*   scenario_variant,
+              int           trial_id,
+              bool          change_expected,
+              const char*   change_type,
+              uint32_t      poll_period_ms);
+
+    // Configure time synce once PLC epoch is known
+    void set_time_sync(int64_t plc_epoch_ms_at_sync, int64_t esp_ms_at_sync);
 
     // Reset counters for a fresh repetition of the same scenario
     void reset_metrics();

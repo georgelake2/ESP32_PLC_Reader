@@ -114,7 +114,12 @@ Experiment::init("S1",           // scenario_id
 
     const auto plc_ts   = EpochTime::fromArray(dt);
     const int64_t epoch = EpochTime::toEpochMs(plc_ts, PLC_TZ_OFFSET_MINUTES);
+
     if (epoch >= 0) ESP_LOGI(TAG, "PLC epoch (ms) = %lld", (long long)epoch);
+
+    // Establish PLC-ESP time relationship
+    int64_t esp_ms_now = EpochTime::espNowMs();
+    Experiment::set_time_sync(epoch, esp_ms_now);
 
     // AuditValue (LINT) once ---------------------------------------------------------------------
     int64_t audit = 0;
