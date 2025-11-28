@@ -96,3 +96,5 @@ sdkconfig.esp32-c6-devkitc-1
 
 # Paper Repository (Nested)
 paper/
+trial_setup_checklist.md
+trial_setup_checklist.pdf
