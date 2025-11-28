@@ -11,10 +11,16 @@
 #include "ExperimentInstrumentation.hpp"
 #include "EnipClient.hpp"
 #include "json_log.hpp"
+#include "EpochTime.hpp"
+#include "iso8601.hpp"
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+#ifndef PLC_TZ_OFFSET_MINUTES      // NEW (matches main.cpp default)
+#define PLC_TZ_OFFSET_MINUTES 0
+#endif
 
 static const char* TAG = "AUDIT_MON";
 
@@ -28,6 +34,7 @@ struct AuditCfg {
     const char* kp_tag;
     const char* ki_tag;
     const char* kd_tag;
+    const char* change_stamp_tag;
     uint32_t poll_ms;
 };
 
@@ -92,6 +99,12 @@ static void audit_task(void* arg) {
         bool ok_kp      = read_real(*cfg.enip, cfg.kp_tag,      kp);
         bool ok_ki      = read_real(*cfg.enip, cfg.ki_tag,      ki);
         bool ok_kd      = read_real(*cfg.enip, cfg.kd_tag,      kd);
+
+        std::array<int32_t,7> change_stamp{};
+        bool ok_stamp = false;
+        if (cfg.change_stamp_tag && cfg.change_stamp_tag[0] != '\0') {
+            ok_stamp = read_dint_array7(*cfg.enip, cfg.change_stamp_tag, change_stamp);
+        }
 
         if (!ok_audit || !ok_auth || !ok_kp || !ok_ki || !ok_kd) {
             Experiment::record_read_failure();
@@ -269,6 +282,15 @@ static void audit_task(void* arg) {
             log.groundtruth.t_change_groundtruth_iso = "NA";
             log.groundtruth.t_change_marker_seen     = "NA";
 
+            if (ok_stamp && change_stamp[0] >= 2000) {  
+                auto plc_dt = EpochTime::fromArray(change_stamp);
+                int64_t plc_epoch_ms = EpochTime::toEpochMs(plc_dt, PLC_TZ_OFFSET_MINUTES);
+                if (plc_epoch_ms >= 0) {
+                    log.plc_time.plc_timestamp_ms  = plc_epoch_ms;
+                    log.plc_time.plc_timestamp_iso = make_iso8601_from_millis(static_cast<uint64_t>(plc_epoch_ms));
+                }
+            }
+
             Experiment::emit_log_entry(log);
         }
 
@@ -283,10 +305,11 @@ void start_audit_monitor(EnipClient* enip,
                          const char* kp_tag,
                          const char* ki_tag,
                          const char* kd_tag,
+                         const char* change_stamp_tag,
                          uint32_t poll_ms) {
     //
     //
     //
-    auto* cfg = new AuditCfg{enip, audit_tag, authorized_tag, kp_tag, ki_tag, kd_tag, poll_ms};
+    auto* cfg = new AuditCfg{enip, audit_tag, authorized_tag, kp_tag, ki_tag, kd_tag, change_stamp_tag, poll_ms};
     xTaskCreate(audit_task, "audit_task", 4096, cfg, 5, nullptr);
 }

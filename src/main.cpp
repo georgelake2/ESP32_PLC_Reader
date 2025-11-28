@@ -146,7 +146,8 @@ Experiment::init("S1",           // scenario_id
                         WDG_BASE ".AuthorizedUser",
                         WDG_BASE ".WDG_Kp",
                         WDG_BASE ".WDG_Ki",
-                        WDG_BASE ".WDG_Kd", 
+                        WDG_BASE ".WDG_Kd",
+                        WDG_BASE ".ChangeStamp", 
                         /*poll_ms=*/ 200);
 
     // Periodically dump an audit summary every 10 seconds
