@@ -93,3 +93,6 @@ logs/log_test.jsonl
 .ipynb_checkpoints/experiment_log_template-checkpoint.json
 sdkconfig.esp32-c6-devkitc-1
 
+
+# Paper Repository (Nested)
+paper/

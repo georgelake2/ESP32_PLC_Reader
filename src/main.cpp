@@ -74,11 +74,11 @@ extern "C" void app_main(void) {
 
     // Initialize experiment instrumentation (scenario label)
     // Change scenario label as appropriate
-Experiment::init("S1",           // scenario_id
-                 "baseline",     // scenario_variant
+Experiment::init("S3",           // scenario_id
+                 "unauthorized_change",     // scenario_variant
                  1,             // trial_id
-                 false,         // change_expected
-                 "none",        // change_type
+                 true,         // change_expected
+                 "auditvalue",        // change_type
                  200);          // poll_period_ms (matches AuditMonitor cfg)
 
     // NVS + Wi-Fi

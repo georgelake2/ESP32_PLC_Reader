@@ -2,9 +2,9 @@ import time
 import serial
 import json
 
-PORT = "COM7"
+PORT = "/dev/ttyACM0"
 BAUD = 115200
-OUT = "logs/log_test.jsonl"
+OUT = "logs/S3_T1xx.jsonl"
 
 def extract_json(text: str):
     text = text.strip()
@@ -32,6 +32,7 @@ with serial.Serial(PORT, BAUD, timeout=1) as ser, open(OUT, "w", encoding="utf-8
     # Optional: discard first line after reset
     ser.readline()
 
+    print("Running Session 3, Trial 1")
     print("Logging JSON… Ctrl+C to stop")
     while True:
         line = ser.readline()
